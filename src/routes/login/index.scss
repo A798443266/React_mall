@@ -1,0 +1,41 @@
+.contain {
+  position: relative;
+  height: 670px;
+  width: 100%;
+  background-image: url("./images/logBg.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  .login_wrap {
+    position: absolute;
+    width: 360px;
+    height: 380px;
+    padding: 30px 40px;
+    background: #fff;
+    border-radius: 4px;
+    left: 50%;
+    right: 50%;
+    transform: translate(-50%, 50%);
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    > p {
+      color: rgb(0,0,0);
+      font-weight: bold;
+      font-size: 20px;
+      text-align: center;
+    }
+    .login-form {
+      .login-form-button {
+        width: 100%;
+      }
+      .register {
+        font-size: 14px;
+      }
+      .tip {
+        font-size: 12px;
+        span {
+          color: #47abfc;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+.itemAmountMain {
+  display: inline-flex;
+  margin-right: 12px;
+  width: 122px;
+  .actionLeft, .actionRight {
+    height: 28px;
+    width: 28px;
+    border: 1px solid #e5e5e5;
+    background: #FFF;
+    text-align: center;
+    line-height: 26px;
+    padding: 0;
+    border-radius: 0;
+    color: #bbb;
+    font-size: 18px;
+
+    display: block;
+    float: left;
+    &:disabled {
+      background: #f0f0f0;
+
+    }
+  }
+
+  .actionLeft {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    margin-right: -1px;
+    &:hover {
+      border-width: 1px;
+      z-index: 10;
+    }
+  }
+
+  .actionRight {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin-left: -1px;
+    &:hover {
+      border-width: 1px;
+      z-index: 10;
+    }
+  }
+
+  .active {
+    background: white;
+  }
+  input {
+    width: 60px;
+    height: 28px;
+    line-height: 28px;
+    border: 1px solid #ddd;
+    color: #343434;
+    text-align: center;
+    padding: 4px 0;
+    background-color: #fff;
+    z-index: 2;
+    display: block;
+    float: left;
+    border-radius: 0;
+  }
+}
