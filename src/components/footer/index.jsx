@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "dva/router";
 import './index.scss'
 
 export default class Footer extends React.Component {
@@ -167,13 +168,13 @@ export default class Footer extends React.Component {
         <div className="d7">
           <p>
             <span className="s71">
-              <a href="#">
+              <Link to="#">
                 <img src={require("./images/img91.png")} alt="" />
-              </a>
+              </Link>
             </span>
             <span className="s72">|</span>
             <span className="s73">
-              <a href="#">由友好速搭提供技术与服务支持</a>
+              <Link to="#">由友好速搭提供技术与服务支持</Link>
             </span>
           </p>
         </div>

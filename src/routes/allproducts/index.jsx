@@ -4,24 +4,81 @@ import { Link } from "dva/router";
 import Footer from "../../components/footer";
 import styles from "./index.scss";
 import logo from "../../assets/images/logo.png";
+import request from "../../utils/request";
 
 export default class Allproducts extends React.Component {
   state = {
-    shopList: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+    shopList: [],
+    categorys: [{ category: "全部", id: 0 }],
+    curIndex: 0, // 当前分类下标
+    pageNo: 1,
+    pageSize: 10,
+    total: 0,
+    sortType: false
   };
+  async componentDidMount() {
+    const res = await request("/goodsCate");
+    const {
+      extend: { goodCate: categorys }
+    } = res;
+    this.fetchShops({ pageNo: 1, pageSize: 10 });
+    this.setState(preState => ({
+      categorys: preState.categorys.concat(categorys)
+    }));
+  }
+
+  // 价格排序
+  sortByPrice = type => {
+    let { shopList, sortType } = this.state;
+    shopList.sort((s1, s2) => {
+      return type ? s1.price - s2.price : s2.price - s1.price;
+    });
+    sortType = !sortType
+    this.setState({ shopList, sortType });
+  };
+
+  fetchShops = async (data = {}) => {
+    const {
+      extend: {
+        page: { list: shopList, total }
+      }
+    } = await request("/allGoods", { body: data });
+    this.setState({ shopList, total });
+  };
+
+  onChange = (pageNo, pageSize) => {
+    const { curIndex } = this.state;
+    this.setState({ pageNo, pageSize }, () => {
+      this.fetchShops({ pageNo, pageSize, cateId: curIndex });
+    });
+  };
+
+  onShowSizeChange = (current, pageSize) => {
+    const { curIndex } = this.state;
+    this.setState({ pageSize }, () => {
+      this.fetchShops({ pageNo: 1, pageSize, cateId: curIndex });
+    });
+  };
+
+  handleChangeCate = id => {
+    const { pageNo, pageSize } = this.state;
+    this.setState({ curIndex: id }, () => {
+      this.fetchShops({ pageNo, pageSize, cateId: id });
+    });
+  };
+
   render() {
-    const { shopList } = this.state;
-    console.log(styles)
+    const { shopList, categorys, curIndex, total } = this.state;
     return (
-      <div className="container">
-      {/* <div className={styles.container}>  */}
+      <div className="container_all">
+        {/* <div className={styles.container}>  */}
         <header>
           <div>
-            <a href="/">
+            <Link to="/">
               <img src={logo} alt="logo" />
-            </a>
+            </Link>
             <div>
-              <div className="searchBox">
+              <div className="searchBox_all">
                 <input placeholder="请输入商品名称" />
                 <div>
                   <Icon
@@ -30,17 +87,20 @@ export default class Allproducts extends React.Component {
                   />
                 </div>
               </div>
-              <a className="cart" href='/cart'>
+              <Link className="cart_all" to="/cart">
                 <div>
-                  <Icon type="shopping-cart" style={{ marginRight: 3, fontSize: 15 }} />
+                  <Icon
+                    type="shopping-cart"
+                    style={{ marginRight: 3, fontSize: 15 }}
+                  />
                   购物车
                 </div>
-                <span>0</span>
-              </a>
+                <span>2</span>
+              </Link>
             </div>
           </div>
         </header>
-        <div className='container-wrap'>
+        <div className="container-wrap_all">
           <BackTop />
           <Breadcrumb separator=">">
             <Breadcrumb.Item>
@@ -50,76 +110,94 @@ export default class Allproducts extends React.Component {
             </Breadcrumb.Item>
             <Breadcrumb.Item>所有商品</Breadcrumb.Item>
           </Breadcrumb>
-          <div className="screen">
+          <div className="screen_all">
             <table>
-              <tr className="t1">
+              <tr className="t1_all">
                 <th>品牌</th>
                 <td>
-                  <a href="#">无印</a>
-                  <a href="#">博朗</a>
-                  <a href="#">花印</a>
+                  <span>无印</span>
+                  <span>博朗</span>
+                  <span>花印</span>
                 </td>
               </tr>
-              <tr className="t2">
+              <tr className="t2_all">
                 <th>类别</th>
                 <td>
-                  <a href="#">不锈钢</a>
-                  <a href="#">原料水泥</a>
-                  <a href="#">塑料</a>
-                  <a href="#">木质</a>
+                  {categorys.map((ret, i) => {
+                    return (
+                      <span
+                        key={i}
+                        onClick={() => {
+                          this.handleChangeCate(i);
+                        }}
+                        style={{
+                          color: i === curIndex ? "#0d62a3" : "#555",
+                          fontWeight: i === curIndex ? "bold" : ""
+                        }}
+                      >
+                        {ret.category}
+                      </span>
+                    );
+                  })}
                 </td>
               </tr>
             </table>
           </div>
-          <div className="search-bar">
-            <div className="left">
+          <div className="search-bar_all">
+            <div className="left_all">
               <span style={{ marginRight: 20 }}>
                 综合 <Icon type="caret-down" />
               </span>
               <span style={{ marginRight: 20 }}>
                 销量 <Icon type="caret-down" />
               </span>
-              <span>
+              <span
+                onClick={() => {
+                  this.sortByPrice();
+                }}
+              >
                 价格 <Icon type="caret-down" />
               </span>
             </div>
-            <div className="right">
+            <div className="right_all">
               仅显示有货 <Switch />
               <span style={{ marginLeft: 20 }}>
                 共<span style={{ color: "red" }}>&nbsp;20&nbsp;</span>个商品
               </span>
             </div>
           </div>
-          <div className="shops">
+          <div className="shops_all">
             <ul>
-              {shopList.map((shop, index) => {
+              {shopList.map((ret, i) => {
                 return (
-                  <li key={`${index}${Math.random()}`}>
-                    <a href={`/proDetail/${index + 1}`}>
-                      <img src={require("../home/images/img21.png")} />
-                    </a>
+                  <li key={i}>
+                    <Link to={`/proDetail/${ret.id}`}>
+                      <img src={ret.mainPic} alt="" />
+                    </Link>
                     <p
-                      className="p1"
+                      className="p1_all"
                       onClick={() => {
-                        window.location.href = `/proDetail/${index + 1}`;
+                        this.props.history.push(`/proDetail/${ret.id}`);
                       }}
                     >
-                      春夏秋冬
+                      {ret.goods}
                     </p>
-                    <p className="p2">
-                      ￥<span>22.5</span>
+                    <p className="p2_all">
+                      ￥<span>{ret.price}</span>
                     </p>
-                    <p className="p3">小爱小家专营店</p>
+                    <p className="p3_all">{ret.introduce}</p>
                   </li>
                 );
               })}
             </ul>
           </div>
-          <div className="pagination">
+          <div className="pagination_all">
             <Pagination
-              total={50}
+              total={total}
               showSizeChanger
               showQuickJumper
+              onShowSizeChange={this.onShowSizeChange}
+              onChange={this.onChange}
             />
           </div>
         </div>

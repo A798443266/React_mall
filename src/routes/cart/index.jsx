@@ -1,8 +1,11 @@
 import React from "react";
-import { Empty, Table, Checkbox, Button, Modal } from "antd";
+import { Empty, Table, Checkbox, Button, Modal, message } from "antd";
+import { Link } from "dva/router";
 import Footer from "../../components/footer";
 import Navigator from "../../components/navigator";
 import QuantityButton from "../../components/quantity-button";
+import cache from "../../utils/cache";
+import request from "../../utils/request";
 import "./index.scss";
 
 const CartTitle = () => (
@@ -21,10 +24,10 @@ const EmptyCart = () => (
     <Empty description={false} />
     <div className="label">购物车空空的，请前往商城首页去购物~</div>
     <div className="link">
-      <a href="/searchItem?q=">
+      <Link to="/allproducts">
         去购物
         <span style={{ color: "#979797" }}>{"  >"}</span>
-      </a>
+      </Link>
     </div>
   </div>
 );
@@ -32,15 +35,18 @@ const EmptyCart = () => (
 const cartFooter = ({
   onManualSelectAll,
   selectedRowKeys,
-  tableList,
-  formatTotalPrice
+  quantities,
+  goods,
+  selectGoods,
+  formatTotalPrice,
+  history
 }) => () => (
   <div className="cartFooter">
     <div className="selectAll">
       <Checkbox
-        checked={selectedRowKeys.length === tableList.length}
+        checked={selectedRowKeys.length === goods.length}
         onChange={onManualSelectAll}
-        disabled={tableList.length === 0}
+        disabled={goods.length === 0}
       />
     </div>
     <span className="selectAllLabel actionItem">全选</span>
@@ -70,15 +76,25 @@ const cartFooter = ({
         <Button
           className="submitBtn pay"
           // loading={loading}
-          // onClick={submit}
-          // disabled={cartSummary.checkedLines === 0}
+          disabled={selectedRowKeys.length === 0}
+          onClick={() => {
+            goods.filter((ret, i) => selectedRowKeys.includes);
+            history.push({
+              pathname: "/settlement",
+              state: {
+                ids: selectedRowKeys,
+                nums: quantities,
+                goods: selectGoods
+              }
+            });
+          }}
         >
           下单
         </Button>
         <Button
           className="submitBtn back"
           onClick={() => {
-            window.location.href = "/allproducts";
+            history.push("/allproducts");
           }}
         >
           继续购物
@@ -90,9 +106,9 @@ const cartFooter = ({
 
 const ImageView = ({ info }) => (
   <div className="itemLogo">
-    <a href={`/proDetail:id=1`}>
-      <img src={require("../home/images/img25.png")} />
-    </a>
+    <Link to={`/prodetail/${info.id}`}>
+      <img src={info.mainPic} alt="" />
+    </Link>
   </div>
 );
 
@@ -107,15 +123,15 @@ export default class Cart extends React.Component {
     {
       title: "商品信息",
       width: 330,
-      dataIndex: "title",
+      dataIndex: "goods",
       render: (text, row) => {
         return (
           <div className="shopCartName">
             <div className="itemDescription">
               <div className="itemDescName cutwordsTwoLine" title={row.title}>
-                <a href={`/proDetail:id=${row.id}`}>{row.title}</a>
+                <Link to={`/prodetail/${row.id}`}>{row.goods}</Link>
               </div>
-              <div className="skuAttrs">这里是商品的详细描述</div>
+              <div className="skuAttrs">{row.introduce}</div>
             </div>
           </div>
         );
@@ -143,7 +159,7 @@ export default class Cart extends React.Component {
     },
     {
       title: "小计(元)",
-      dataIndex: "summaryPrice",
+      dataIndex: "",
       render: (text, row) => (
         <div className="itemSubtotalPrice">{`¥ ${row.price *
           row.quantity}`}</div>
@@ -156,12 +172,17 @@ export default class Cart extends React.Component {
       render: (text, row) => (
         <div>
           <div>
-            <a className="actionItem" onClick={() => this.deleteItem(row)}>
+            <a
+              className="actionItem"
+              href="javascript:;"
+              onClick={() => this.deleteItem(row)}
+            >
               删除
             </a>
           </div>
           <a
             className="actionItem"
+            href="javascript:;"
             // onClick={this.addWishlist(row.cartLineId)}
           >
             移到我的收藏
@@ -175,54 +196,80 @@ export default class Cart extends React.Component {
     super(props);
     this.tableRef = React.createRef();
     this.state = {
-      selectAll: false,
-      selectedRowKeys: [],
-      cartGroup: {
-        name: "自营",
-        totalItems: 1,
-        totalLines: 1
-      },
-      tableList: [
-        {
-          id: 1,
-          title: "名称",
-          price: 23,
-          quantity: 1,
-          summaryPrice: 23
-        },
-        {
-          id: 2,
-          title: "名称",
-          price: 23,
-          quantity: 1,
-          summaryPrice: 23
-        }
-      ]
+      user: {},
+      goods: [], // 购物车商品列表
+      selectAll: false, // 当前是否是全选
+      selectedRowKeys: [], //选中商品的id
+      selectGoods: [], //选中的商品
+      quantities: [], //选中商品对应的数量数组
+      isFirstFetch: true //是否是第一次请求数据
     };
   }
 
+  async componentDidMount() {
+    const user = cache.getUser();
+    this.setState({ user }, this.fetchGoods);
+  }
+
+  fetchGoods = async () => {
+    const { user } = this.state;
+    const { goods: preGoods, isFirstFetch } = this.state;
+    const res = await request("getShopcartById", { body: { userId: user.id } });
+    const {
+      extend: { goods }
+    } = res;
+    goods.forEach((ret, i) => {
+      if (isFirstFetch) {
+        ret.quantity = 1; //第一次请求的时候置数量为1
+        this.setState({ isFirstFetch: false });
+      } else {
+        const quantity = preGoods.find(item => item.id === ret.id).quantity;
+        ret.quantity = quantity;
+      }
+    });
+    this.setState({ goods });
+  };
+
   deleteItem = row => {
+    const { user } = this.state;
     Modal.confirm({
       title: "删除商品",
       content: "确认要删除选中商品吗？",
       okText: "确定",
-      cancelText: "取消"
+      cancelText: "取消",
+      onOk: async () => {
+        const res = await request("/delFromShopCart", {
+          method: "DELETE",
+          body: { userId: user.id, goodsId: row.id }
+        });
+        const { code } = res;
+        if (code === 200) {
+          message.success("删除成功！");
+          this.fetchGoods();
+        }
+      }
     });
   };
 
   onSelectAll = (selected, selectedRows, changeRows) => {
     if (selected) {
-      this.setState({ selectedRowKeys: this.getAllRowKeys() });
+      const { goods } = this.state;
+      const { ids, quantities } = this.getAllRow();
+      this.setState({ selectedRowKeys: ids, quantities, selectGoods: goods });
     } else {
-      this.setState({ selectedRowKeys: [] });
+      this.setState({ selectedRowKeys: [], quantities: [], selectGoods: [] });
     }
   };
 
-  getAllRowKeys() {
-    const { tableList } = this.state;
-    const keys = [];
-    tableList.forEach(i => keys.push(i.id));
-    return keys;
+  getAllRow() {
+    const { goods } = this.state;
+    const ids = [];
+    const quantities = [];
+    goods.forEach(i => {
+      ids.push(i.id);
+      quantities.push(i.quantity);
+    });
+    return { ids, quantities };
   }
 
   onManualSelectAll = e => {
@@ -231,35 +278,32 @@ export default class Cart extends React.Component {
   };
 
   onQunatityChange = (quantity, id) => {
-    const { tableList } = this.state;
-    tableList.find(i => i.id === id).quantity = quantity;
-    this.setState({
-      ...this.state,
-      tableList
-    });
+    const { goods } = this.state;
+    goods.find(i => i.id === id).quantity = quantity;
+    this.setState({ goods });
   };
 
   formatTotalPrice = () => {
-    const { tableList, selectedRowKeys } = this.state;
-    const selectRow = tableList.filter(i => selectedRowKeys.includes(i.id));
-    return selectRow.reduce((total, current) => {
+    const { goods, selectedRowKeys } = this.state;
+    const selectGoods = goods.filter(i => selectedRowKeys.includes(i.id));
+    return selectGoods.reduce((total, current) => {
       return current.quantity * current.price + total;
     }, 0);
   };
 
   render() {
-    const { tableList, selectedRowKeys } = this.state;
+    const { selectedRowKeys, quantities, goods, selectGoods } = this.state;
     return (
       <div className="shoppingCartBack">
         <Navigator />
         <CartTitle />
-        {tableList.length === 0 ? (
+        {goods.length === 0 ? (
           <EmptyCart />
         ) : (
           <div className="shoppingCart">
             <div className="shoppingCartContent" />
             <div className="shoppingCartTitle">
-              {`全部商品 ( ${tableList.length || 0} ) `}
+              {`全部商品 ( ${goods.length || 0} ) `}
             </div>
             <Table
               rowKey="id"
@@ -268,11 +312,11 @@ export default class Cart extends React.Component {
               bordered={false}
               pagination={false}
               columns={this.tableColumns}
-              dataSource={tableList || null}
+              dataSource={goods || null}
               rowSelection={{
                 columnWidth: 46,
                 onChange: (selectedRowKeys, selectedRows) => {
-                  this.setState({ selectedRowKeys });
+                  this.setState({ selectedRowKeys, selectGoods: selectedRows });
                 },
                 selectedRowKeys,
                 onSelectAll: this.onSelectAll
@@ -280,8 +324,11 @@ export default class Cart extends React.Component {
               footer={cartFooter({
                 onManualSelectAll: this.onManualSelectAll,
                 selectedRowKeys,
-                tableList,
-                formatTotalPrice: this.formatTotalPrice
+                quantities,
+                goods,
+                selectGoods,
+                formatTotalPrice: this.formatTotalPrice,
+                history: this.props.history
               })}
             ></Table>
           </div>

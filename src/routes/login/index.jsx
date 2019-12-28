@@ -1,7 +1,9 @@
 import React from "react";
 import { Form, Button, Input, Icon, Checkbox, notification } from "antd";
+import { connect } from "dva";
 import Navigator from "../../components/navigator";
 import Footer from "../../components/footer";
+import cache from '../../utils/cache'
 import "./index.scss";
 
 class Login extends React.Component {
@@ -16,26 +18,39 @@ class Login extends React.Component {
   }
 
   handleLogin = () => {
-    this.props.form.validateFields(['username', 'password'],(err, values) => {
-      if (!err) {
-        const { isLogin } = this.state;
-        notification.success({ message: "登陆成功！" });
+    this.props.form.validateFields(
+      ["username", "password"],
+      async (err, values) => {
+        if (!err) {
+          const data = { phone: values.username, password: values.password };
+          const res = await this.props.login(data);
+          const { code, msg, user } = res;
+          if (code === 200) {
+            notification.success({ message: "登陆成功！" });
+            cache.saveUser(user)
+            this.props.history.push('/')
+          } else {
+            notification.error({ message: msg });
+          }
+        }
       }
-    });
+    );
   };
 
   handleRegiter = () => {
-    this.props.form.validateFields(['registerName', 'pwd', 'pwd1'],(err, values) => {
-      if (!err) {
-        const { isLogin } = this.state;
-        notification.success({ message: "注册成功！" });
+    this.props.form.validateFields(
+      ["registerName", "pwd", "pwd1"],
+      (err, values) => {
+        if (!err) {
+          const { isLogin } = this.state;
+          notification.success({ message: "注册成功！" });
+        }
       }
-    });
+    );
   };
 
   comfirePassWord = (rule, value, cb) => {
     const pwd = this.props.form.getFieldValue("pwd");
-    console.log(value)
     if (value !== pwd) {
       cb("两次密码不相等");
     } else {
@@ -109,7 +124,7 @@ class Login extends React.Component {
                     href="javascript:;"
                     style={{ float: "right" }}
                     onClick={() => {
-                      this.props.form.resetFields(['username', 'password'])
+                      this.props.form.resetFields(["username", "password"]);
                       this.setState({ isLogin: false });
                     }}
                   >
@@ -160,7 +175,7 @@ class Login extends React.Component {
                     rules: [
                       { required: true, message: "请确认密码" },
                       { validator: this.comfirePassWord }
-                    ],
+                    ]
                   })(
                     <Input
                       prefix={
@@ -178,7 +193,11 @@ class Login extends React.Component {
                   已有账号？请
                   <span
                     onClick={() => {
-                      this.props.form.resetFields(['registerName', 'pwd', 'pwd1'])
+                      this.props.form.resetFields([
+                        "registerName",
+                        "pwd",
+                        "pwd1"
+                      ]);
                       this.setState({ isLogin: true });
                     }}
                   >
@@ -201,5 +220,19 @@ class Login extends React.Component {
     );
   }
 }
+const mapStateToProps = ({ app: { username } }) => ({ username });
 
-export default Form.create()(Login);
+const mapDispatchToProps = dispatch => {
+  return {
+    async login(data) {
+      const res = await dispatch({ type: "app/login", payload: { data } });
+      return res;
+    },
+    saveUser(username) {
+      dispatch({ type: "app/saveUser", payload: { username } });
+    },
+  }
+}
+export default Form.create()(
+  connect(mapStateToProps, mapDispatchToProps)(Login)
+);

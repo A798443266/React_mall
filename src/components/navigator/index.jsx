@@ -1,15 +1,45 @@
 import React from "react";
 import { Link } from "dva/router";
-import styles from "./index.scss";
-
+import { Menu, Badge, Icon } from "antd";
+import "./index.scss";
 import logo from "./image/logo.png";
 import cart from "./image/cart.png";
-import search from "./image/search.png";
+import cache from "../../utils/cache";
+import { withRouter } from "dva/router";
+import request from "../../utils/request";
 
-export default class Navigator extends React.Component {
+const { SubMenu } = Menu;
+
+class Navigator extends React.Component {
   state = {
-    showCategory: false
+    showCategory: false,
+    user: {},
+    cates: [], // 分类名称
+    curCate: [], //当前中分类商品
+    curIndex: 0
   };
+
+  async componentDidMount() {
+    const user = cache.getUser();
+    const res = await request("/goodsCate");
+    let curCate = [];
+    const {
+      extend: { goodCate: cates }
+    } = res;
+    if (cates.length) {
+      const {
+        extend: {
+          page: { list }
+        }
+      } = await request("/allGoods", {
+        body: {
+          cateId: cates[0].id
+        }
+      });
+      curCate = list;
+    }
+    this.setState({ user, cates, curCate });
+  }
 
   handleShowCategory = (isEnter = false) => {
     const { validMouse = true } = this.props;
@@ -19,95 +49,108 @@ export default class Navigator extends React.Component {
     this.setState({ showCategory: isEnter });
   };
 
+  logout = () => {
+    cache.clearUser();
+    this.props.history.push("/login");
+  };
+
+  handleEnterCategory = async (id, curIndex) => {
+    const {
+      extend: {
+        page: { list: curCate }
+      }
+    } = await request("/allGoods", {
+      body: {
+        cateId: id
+      }
+    });
+    this.setState({ curCate, curIndex });
+  };
+
   getCurrentPath = () => window.location.pathname;
 
   render() {
-    
+    const { user, cates, curCate, curIndex } = this.state;
+    const { name } = user;
     return (
       <div className="navigation">
         <div className="wrap">
           <Link to="/" className="logo">
             <img src={logo} alt="logo" className="logoi" />
           </Link>
-          <ul className="ul-bar-left">
-            <li>
-              <a
-                href="#"
-                className="word chakan"
-                onMouseEnter={() => this.handleShowCategory(true)}
-                onMouseLeave={() => this.handleShowCategory(false)}
-              >
+          <ul className="left">
+            <li
+              onMouseEnter={() => this.handleShowCategory(true)}
+              onMouseLeave={() => this.handleShowCategory(false)}
+            >
+              <Link to="#" className="word chakan">
                 查看所有类别
-              </a>
+              </Link>
             </li>
             <li>
-              <Link to='/' className="word">
+              <Link to="/" className="word">
                 首页
               </Link>
             </li>
             <li>
-              <a href="/allproducts" className="word">
+              <Link to="/allproducts" className="word">
                 所有产品
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="word">
+              <Link to="#" className="word">
                 博客
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="word">
+              <Link to="#" className="word">
                 文章列表
-              </a>
+              </Link>
             </li>
           </ul>
-          <ul className="ul-bar-right">
-            <li className="word a0">0</li>
-            <li className="img2">
-              <Link to='/cart'>
-                <img src={cart} alt="购物车" />
-              </Link>
-            </li>
-            <li>
-              <Link
-                className="word zhuc"
-                to={{
-                  pathname: "/login",
-                  state: { isLogin: false }
+          <div
+            className="logo-wrap"
+            style={{
+              visibility:
+                this.getCurrentPath() === "/login" ? "hidden" : "visible"
+            }}
+          >
+            <Menu mode="horizontal">
+              <SubMenu
+                title={<span>{name ? `欢迎您：${name}` : "登录 | 注册"}</span>}
+                onTitleClick={() => {
+                  if (!name) {
+                    this.props.history.push("/login");
+                  }
                 }}
               >
-                注册
+                {name ? (
+                  <Menu.Item
+                    key="1"
+                    onClick={() => this.props.history.push("/user")}
+                  >
+                    <Icon type="user" />
+                    个人中心
+                  </Menu.Item>
+                ) : null}
+                {name ? (
+                  <Menu.Item key="2" onClick={this.logout}>
+                    <Icon type="logout" />
+                    退出登录
+                  </Menu.Item>
+                ) : null}
+              </SubMenu>
+            </Menu>
+          </div>
+          <div className="cart">
+            <div className="img2">
+              <Link to="/cart">
+                <Badge count={3}>
+                  <img src={cart} alt="购物车" />
+                </Badge>
               </Link>
-            </li>
-            <li
-              className="word ash"
-              style={{
-                display: this.getCurrentPath() === "/login" ? "none" : "block"
-              }}
-            >
-              |
-            </li>
-            <li
-              style={{
-                display: this.getCurrentPath() === "/login" ? "none" : "block"
-              }}
-            >
-              <Link
-                className="word dengl"
-                to={{
-                  pathname: "/login",
-                  state: { isLogin: true }
-                }}
-              >
-                登录
-              </Link>
-            </li>
-            <li className="img3">
-              <a href="#">
-                <img src={search} alt="搜索" />
-              </a>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
         <div
           className="wrap2"
@@ -116,51 +159,42 @@ export default class Navigator extends React.Component {
           onMouseLeave={() => this.handleShowCategory(false)}
         >
           <ul>
-            <li>
-              <a href="">不锈钢</a>
-            </li>
-            <li>
-              <a href="">原料水泥</a>
-            </li>
-            <li>
-              <a href="">塑料</a>
-            </li>
-            <li>
-              <a href="">木制</a>
-            </li>
-            <li>
-              <a href="">陶瓷</a>
-            </li>
+            {cates.map((ret, i) => {
+              const { id } = ret;
+              return (
+                <li
+                  key={i}
+                  onMouseEnter={() => {
+                    this.handleEnterCategory(id, i);
+                  }}
+                >
+                  <Link
+                    to="/allproducts"
+                    style={{ color: curIndex === i ? "#e3be96" : "#1f1f1f" }}
+                  >
+                    {ret.category}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
-          <div className="wA1">
-            <a href="#" className="w2I">
-              <img src={require("./image/img101.png")} alt="" />
-            </a>
-            <a href="#" className="w2P1">
-              <p>简约原木餐盘</p>
-            </a>
-            <p className="w2P2">￥300.00</p>
-          </div>
-          <div className="wA2">
-            <a href="#" className="w2I">
-              <img src={require("./image/img102.png")} alt="" />
-            </a>
-            <a href="#" className="w2P1">
-              <p>不锈钢时尚咖啡水壶</p>
-            </a>
-            <p className="w2P2">￥400.00</p>
-          </div>
-          <div className="wA3">
-            <a href="#" className="w2I">
-              <img src={require("./image/img103.png")} alt="" />
-            </a>
-            <a href="#" className="w2P1">
-              <p>经典系列红色时钟</p>
-            </a>
-            <p className="w2P2">￥580.00</p>
-          </div>
+          {curCate.map((ret, i) => {
+            return (
+              <div className={`wA${i + 1}`} key={i}>
+                <Link to={`/proDetail/${ret.id}`} className="w2I">
+                  <img src={ret.mainPic} alt="" />
+                </Link>
+                <Link to={`/proDetail/${ret.id}`} className="w2P1">
+                  <p>{ret.goods}</p>
+                </Link>
+                <p className="w2P2">￥{ret.price}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   }
 }
+
+export default withRouter(Navigator);

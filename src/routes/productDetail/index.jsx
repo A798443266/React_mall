@@ -1,8 +1,10 @@
-import React, { createRef } from "react";
-import { Breadcrumb, Button, message } from "antd";
+import React from "react";
+import { Breadcrumb, Button, message, Modal } from "antd";
 import Navigator from "../../components/navigator";
 import Footer from "../../components/footer";
 import QuantityButton from "../../components/quantity-button";
+import request from "../../utils/request";
+import cache from "../../utils/cache";
 import "./index.scss";
 
 const maskWidth = 300;
@@ -15,18 +17,37 @@ class ProductDetail extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      showMask: false //移动遮罩
+      user: {},
+      showMask: false, //移动遮罩
+      good: {},
+      subPics: [],
+      curIndex: -1 //当前小图下标
     };
   }
 
-  componentDidMount() {
-    setTimeout(() => {
-      console.log("---:", this.mask.offsetWidth);
-      this.setState({
-        maskWidth: this.mask.offsetWidth,
-        maskHeight: this.mask.offsetHeight
-      });
-    }, 100);
+  async componentDidMount() {
+    //重置页面为顶部
+    document.getElementById("root").scrollIntoView(true);
+    const {
+      match: {
+        params: { id }
+      }
+    } = this.props;
+    const user = cache.getUser();
+    const res = await request("/goodsById", { body: { id } });
+    const {
+      extend: { good }
+    } = res;
+    let { subPic: subPics } = good;
+    subPics = subPics ? subPics.split(",") : [];
+    this.setState({ good, subPics, user });
+    // setTimeout(() => {
+    //   console.log("---:", this.mask.offsetWidth);
+    //   this.setState({
+    //     maskWidth: this.mask.offsetWidth,
+    //     maskHeight: this.mask.offsetHeight
+    //   });
+    // }, 100);
   }
 
   handleEnterMagnifiter = e => {
@@ -39,7 +60,7 @@ class ProductDetail extends React.Component {
 
   getContainerXY = () => {
     return this.container.getBoundingClientRect();
-  }
+  };
 
   handleMaskMove = e => {
     let left = 0;
@@ -68,18 +89,55 @@ class ProductDetail extends React.Component {
     this.bagImg.style.top = `${top}px`;
   };
 
-  addCart = e => {
-    message.success('添加成功!')
-  }
+  addCart = async () => {
+    // message.success("添加成功!");
+    const { user } = this.state;
+    const {
+      match: {
+        params: { id }
+      }
+    } = this.props;
+    const { code } = await request("/putShopCart", {
+      method: "POST",
+      body: {
+        userId: user.id,
+        goodsId: id
+      }
+    });
+    if (code === 200) {
+      Modal.confirm({
+        title: "成功添加",
+        content: "商品已经成功添加到购物车中，是否立即前往购物车结算？",
+        okText: "立即前往",
+        cancelText: "再看看",
+        onOk: () => {
+          this.props.history.push('/cart')
+        },
+      });
+    } else if(code === 300) {
+      message.info("此商品已经在购物车中了，无须重复添加哦~");
+    } else {
+      message.error("出错了");
+    }
+  };
+
+  handleSubPic = index => {
+    let { curIndex, subPics } = this.state;
+    if (index === curIndex) return;
+    this.bagImg.src = subPics[index];
+    this.mainPic.src = subPics[index];
+    curIndex = index;
+    this.setState({ curIndex });
+  };
 
   renderContainer() {
-    const { showMask } = this.state;
+    const { showMask, good, curIndex, subPics } = this.state;
     return (
       <div className="container">
         <Breadcrumb className="breadcrumb" separator=">">
           <Breadcrumb.Item>首页</Breadcrumb.Item>
           <Breadcrumb.Item>所有商品</Breadcrumb.Item>
-          <Breadcrumb.Item>经典系列时钟</Breadcrumb.Item>
+          <Breadcrumb.Item>{good.goods}</Breadcrumb.Item>
         </Breadcrumb>
         <div className="info">
           <div className="left-info">
@@ -93,37 +151,40 @@ class ProductDetail extends React.Component {
               >
                 {/* <!--当前图片显示容器--> */}
                 <div className="images-cover">
-                  <img src={require("./images/img42.png")} alt="" />
+                  <img
+                    src={good.mainPic}
+                    alt=""
+                    ref={ref => {
+                      this.mainPic = ref;
+                    }}
+                  />
                 </div>
                 {/* 跟随鼠标移动的遮罩 */}
                 <div
                   className="move-view"
                   style={{ display: showMask ? "block" : "none" }}
-                  ref={ref => (this.mask = ref)}
+                  ref={ref => {
+                    this.mask = ref;
+                  }}
                 ></div>
               </div>
               <div className="magnifier-assembly">
                 <ul>
-                  <li>
-                    <div className="small-img">
-                      <img src={require("./images/img46.png")} />
-                    </div>
-                  </li>
-                  <li>
-                    <div className="small-img">
-                      <img src={require("./images/img47.png")} />
-                    </div>
-                  </li>
-                  <li>
-                    <div className="small-img">
-                      <img src={require("./images/img43.png")} />
-                    </div>
-                  </li>
-                  <li>
-                    <div className="small-img">
-                      <img src={require("./images/img42.png")} />
-                    </div>
-                  </li>
+                  {subPics.map((ret, i) => {
+                    return (
+                      <li
+                        key={i}
+                        className={curIndex === i ? "active" : ""}
+                        onClick={() => {
+                          this.handleSubPic(i);
+                        }}
+                      >
+                        <div className="small-img">
+                          <img src={ret} alt="" />
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
                 {/* 缩略图 */}
               </div>
@@ -133,18 +194,20 @@ class ProductDetail extends React.Component {
                 style={{ display: showMask ? "block" : "none" }}
               >
                 <img
-                  src={require("./images/img42.png")}
-                  ref={ref => (this.bagImg = ref)}
+                  src={good.mainPic}
+                  ref={ref => {
+                    this.bagImg = ref;
+                  }}
                 />
               </div>
             </div>
           </div>
           <div className="right-info">
-            <p className="p1">经典系列时钟</p>
-            <p className="p2">精选材料，设计大师设计，做工精细，家居必备品</p>
+            <p className="p1">{good.goods}</p>
+            <p className="p2">{good.introduce}</p>
             <p className="p3">
-              <span className="s1">￥580</span>
-              <span className="s2">已售出0件</span>
+              <span className="s1">￥{good.price}</span>
+              <span className="s2">已售出{good.sold}件</span>
             </p>
             <p className="p_"></p>
             <p className="p4">选择数量</p>
@@ -157,7 +220,7 @@ class ProductDetail extends React.Component {
                   console.log(quantity);
                 }}
               />
-              <span className="s4">件（库存100件）</span>
+              <span className="s4">件（库存{good.reserve}件）</span>
             </p>
             <Button
               type="primary"

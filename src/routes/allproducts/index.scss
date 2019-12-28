@@ -5,9 +5,9 @@
     clear: both;
   }
 }
-.container {
+.container_all {
   background: #f0f2f5;
-  > .container-wrap {
+  > .container-wrap_all {
     width: 1200px;
     margin: 0 auto;
     padding-top: 10px;
@@ -25,7 +25,7 @@ header {
     justify-content: space-between; 
     > div {
       display: flex;
-      .searchBox {
+      .searchBox_all {
         width: 500px;
         height: 40px;
         border: 2px solid #0d62a3;
@@ -48,7 +48,7 @@ header {
           cursor: pointer;
         }
       }
-      .cart {
+      .cart_all {
         display: flex;
         height: 40px;
         margin-left: 20px;
@@ -79,7 +79,7 @@ header {
   }
 }
 
-.screen {
+.screen_all {
   margin: 30px 0;
   margin-bottom: 10px;
   background: #fff;
@@ -99,22 +99,25 @@ header {
       }
       td {
         padding-left: 10px;
-        a {
+        span {
+          display: inline-block;
           margin-right: 30px;
           color: #555;
           &:hover {
-            text-decoration: underline;
+            font-weight: bold;
+            color: #0d62a3;
+            cursor: pointer;
           }
         }
       }
-      &.t2 {
+      &.t2_all {
         background: #f3f4f4;
       }
     }
   }
 }
 
-.search-bar {
+.search-bar_all {
   background: #fff;
   border: 1px solid #dddee1;
   margin: 20px 0 10px 0;
@@ -127,7 +130,7 @@ header {
   color: #444;
 }
 
-.shops {
+.shops_all {
   margin: 0px 0 15px 0;
   ul {
     @include clearfix();
@@ -164,7 +167,7 @@ header {
         font-weight: bold;
         margin-top: 5px;
       }
-      .p1 {
+      .p1_all {
         font-size: 16px;
         color: #1e1e1e;
         cursor: pointer;
@@ -172,7 +175,7 @@ header {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .p2 {
+      .p2_all {
         color: #ed3f14;
         font-size: 16px;
         font-weight: bold;
@@ -180,7 +183,7 @@ header {
           font-weight: bold;
         }
       }
-      .p3 {
+      .p3_all {
         cursor: pointer;
         color: #999;
         font-size: 14px;
@@ -192,7 +195,7 @@ header {
   }
 }
 
-.pagination {
+.pagination_all {
   text-align: right;
   padding-right: 10px;
   padding-top: 10px;

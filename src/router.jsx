@@ -44,7 +44,12 @@ export default function({ history, app }) {
       path: "/user",
       key: "user",
       component: hasAppDynamicWrapper(() => import("./routes/user"))
-    }
+    },
+    {
+      path: "/settlement",
+      key: "settlement",
+      component: hasAppDynamicWrapper(() => import("./routes/settlement"))
+    },
   ];
 
   return (

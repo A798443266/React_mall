@@ -1,8 +1,9 @@
 import React from "react";
 import { Layout, Icon } from "antd";
-import { Route, Redirect, Switch, Router } from "dva/router";
+import { Route, Switch } from "dva/router";
 import Footer from "../../components/footer";
 import SiderBar from "../../components/sider-bar";
+import Order from './children/order/index.jsx'
 import "./index.scss";
 import logo from "../../assets/images/logo.png";
 const { Sider, Content } = Layout;
@@ -34,7 +35,7 @@ export default class User extends React.Component {
                   />
                   购物车
                 </div>
-                <span>0</span>
+                <span>2</span>
               </a>
             </div>
           </div>
@@ -45,7 +46,7 @@ export default class User extends React.Component {
           </Sider>
           <Content className="content">
             <Switch>
-              <Route path="/user" component={Footer} />
+              <Route path="/user" component={Order} />
             </Switch>
           </Content>
         </Layout>

@@ -18,10 +18,16 @@ function equal(n1, n2) {
     return Math.abs(n1 - n2) < Math.pow(2, -52)
 }
 
-const arr = [1,4,3,4,1,3,6,4,2,2]
+const arr = [1, 4, 3, 4, 1, 3, 6, 4, 2, 2]
 console.log(fun7(arr))
-console.log(0.1+0.2 === 0.3, equal(0.1+0.2, 0.3))
+console.log(0.1 + 0.2 === 0.3, equal(0.1 + 0.2, 0.3))
 //随机生成字母和数字的组合
 console.log(Math.random().toString(36).substr(2))
-console.log([1,2,[1,[4,[5,6,[1,2]]]]].toString())
-console.log({name: 'xiao'}.toString())
+console.log([1, 2, [1, [4, [5, 6, [1, 2]]]]].toString())
+console.log({ name: 'xiao' }.toString())
+
+console.log(arr[10])
+
+const a = [{ id: 1 }, { id: 2 }]
+const b = a.map((ret, i) => ({id:ret.id}))
+console.log(b)

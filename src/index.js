@@ -7,6 +7,7 @@ import models from './models'
 import routers from './router.jsx'
 
 const history = createBrowserHistory()
+
 const app = dva({
   history,
   onError(e) {

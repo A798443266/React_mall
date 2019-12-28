@@ -78,6 +78,9 @@ $rate: 300 / 453;
                 display: block;
               }
             }
+            &.active {
+              border: 1px solid red;
+            }
           }
         }
       }
