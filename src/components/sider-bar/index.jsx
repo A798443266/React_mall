@@ -1,15 +1,16 @@
 import React from "react";
 import { Tree, Icon } from "antd";
+import { withRouter } from "dva/router";
 import "./index.scss";
 
 const { TreeNode } = Tree;
 
-export default class SiderBar extends React.Component {
+class SiderBar extends React.Component {
 
   onSelect = (selectedKeys, e) => {
     switch (selectedKeys[0]) {
       case '2':
-        window.location.href = '/cart'
+        this.props.history.push('/cart')
         break
       default: break  
     }
@@ -20,7 +21,7 @@ export default class SiderBar extends React.Component {
       <Tree
         showIcon
         defaultExpandAll
-        defaultSelectedKeys={["0"]}
+        defaultSelectedKeys={["0-1"]}
         switcherIcon={<Icon type="down" />}
         style={{ marginLeft: 5 }}
         onSelect={this.onSelect}
@@ -45,3 +46,6 @@ export default class SiderBar extends React.Component {
     );
   }
 }
+
+
+export default withRouter(SiderBar);

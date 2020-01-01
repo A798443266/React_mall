@@ -1,6 +1,6 @@
 .contain {
   position: relative;
-  height: 670px;
+  height: 740px;
   width: 100%;
   background-image: url("./images/logBg.png");
   background-repeat: no-repeat;
@@ -8,13 +8,12 @@
   .login_wrap {
     position: absolute;
     width: 360px;
-    height: 380px;
     padding: 30px 40px;
     background: #fff;
     border-radius: 4px;
     left: 50%;
-    right: 50%;
-    transform: translate(-50%, 50%);
+    top: 50%;
+    transform: translate(-50%, -50%);
     box-shadow: 0 2px 4px rgba(0,0,0,.1);
     > p {
       color: rgb(0,0,0);

@@ -3,8 +3,9 @@ import { Form, Button, Input, Icon, Checkbox, notification } from "antd";
 import { connect } from "dva";
 import Navigator from "../../components/navigator";
 import Footer from "../../components/footer";
-import cache from '../../utils/cache'
+import cache from "../../utils/cache";
 import "./index.scss";
+import request from "../../utils/request";
 
 class Login extends React.Component {
   state = {
@@ -27,8 +28,8 @@ class Login extends React.Component {
           const { code, msg, user } = res;
           if (code === 200) {
             notification.success({ message: "登陆成功！" });
-            cache.saveUser(user)
-            this.props.history.push('/')
+            cache.saveUser(user);
+            this.props.history.push("/");
           } else {
             notification.error({ message: msg });
           }
@@ -39,11 +40,16 @@ class Login extends React.Component {
 
   handleRegiter = () => {
     this.props.form.validateFields(
-      ["registerName", "pwd", "pwd1"],
+      ["userName", "phone", "pwd", "pwd1"],
       (err, values) => {
+        const { userName, phone, pwd: password } = values;
         if (!err) {
-          const { isLogin } = this.state;
+          request("/addUser", {
+            method: "PUT",
+            body: { userName, phone, password }
+          });
           notification.success({ message: "注册成功！" });
+          this.setState({ isLogin: true });
         }
       }
     );
@@ -139,8 +145,8 @@ class Login extends React.Component {
                 onSubmit={this.handleSubmit}
               >
                 <Form.Item>
-                  {getFieldDecorator("registerName", {
-                    rules: [{ required: true, message: "请输入账户" }]
+                  {getFieldDecorator("phone", {
+                    rules: [{ required: true, message: "请输入手机号" }]
                   })(
                     <Input
                       prefix={
@@ -149,7 +155,22 @@ class Login extends React.Component {
                           style={{ color: "rgba(0,0,0,.25)" }}
                         />
                       }
-                      placeholder="手机/邮箱/用户"
+                      placeholder="手机号"
+                    />
+                  )}
+                </Form.Item>
+                <Form.Item>
+                  {getFieldDecorator("userName", {
+                    rules: [{ required: true, message: "请输入用户名" }]
+                  })(
+                    <Input
+                      prefix={
+                        <Icon
+                          type="user"
+                          style={{ color: "rgba(0,0,0,.25)" }}
+                        />
+                      }
+                      placeholder="用户名"
                     />
                   )}
                 </Form.Item>
@@ -194,7 +215,8 @@ class Login extends React.Component {
                   <span
                     onClick={() => {
                       this.props.form.resetFields([
-                        "registerName",
+                        "userName",
+                        "phone",
                         "pwd",
                         "pwd1"
                       ]);
@@ -230,9 +252,9 @@ const mapDispatchToProps = dispatch => {
     },
     saveUser(username) {
       dispatch({ type: "app/saveUser", payload: { username } });
-    },
-  }
-}
+    }
+  };
+};
 export default Form.create()(
   connect(mapStateToProps, mapDispatchToProps)(Login)
 );

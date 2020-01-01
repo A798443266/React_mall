@@ -80,6 +80,10 @@ header {
     margin-top: 30px;
     margin-bottom: 30px;
     background-color: #fff;
+    max-height: 800px;
     padding: 0 10px 10px;
+    &::-webkit-scrollbar{ // 隐藏滚动条
+      display:none;
+    }
   }
 }

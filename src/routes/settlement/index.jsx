@@ -196,7 +196,7 @@ class Settlement extends React.Component {
                     </Select>
                   )}
                 </Form.Item>
-                <p className="text_od">收货姓名：</p>
+                <p className="text_od">收货人姓名：</p>
                 <Form.Item>
                   {getFieldDecorator("name", {
                     rules: [
