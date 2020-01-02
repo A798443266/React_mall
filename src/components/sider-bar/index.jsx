@@ -20,15 +20,15 @@ class SiderBar extends React.Component {
     return (
       <Tree
         showIcon
-        defaultExpandAll
+        // defaultExpandAll
         defaultSelectedKeys={["0-1"]}
+        defaultExpandedKeys={['0']}
         switcherIcon={<Icon type="down" />}
         style={{ marginLeft: 5 }}
         onSelect={this.onSelect}
       >
         <TreeNode icon={<Icon type="account-book" />} title="订单中心" key="0">
           <TreeNode title="我的订单" key="0-1" />
-          <TreeNode title="我的评价" key="0-2" />
         </TreeNode>
         <TreeNode icon={<Icon type="wallet" />} title="我的钱包" key="1">
           <TreeNode title="优惠券" key="1-1" />

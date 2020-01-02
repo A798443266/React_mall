@@ -1,7 +1,7 @@
 @mixin clearfix {
   &::after {
     display: table;
-    content: '';
+    content: "";
     clear: both;
   }
 }
@@ -22,7 +22,7 @@ header {
     margin: 0 auto;
     height: 100%;
     align-items: center;
-    justify-content: space-between; 
+    justify-content: space-between;
     > div {
       display: flex;
       .searchBox_all {
@@ -75,7 +75,6 @@ header {
         }
       }
     }
-   
   }
 }
 
@@ -143,14 +142,14 @@ header {
       border-radius: 3px;
       background: #fff;
       height: 308;
-      transition: all .2s;
+      transition: all 0.2s;
       position: relative;
       top: 0;
       margin-top: 10px;
       margin-right: 12px;
       &:hover {
         top: -6px;
-        box-shadow: 0 4px 10px 2px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 10px 2px rgba(0, 0, 0, 0.08);
       }
       &:nth-child(5n) {
         margin-right: 0;
@@ -176,11 +175,15 @@ header {
         white-space: nowrap;
       }
       .p2_all {
-        color: #ed3f14;
-        font-size: 16px;
-        font-weight: bold;
-        span {
+        display: flex;
+        justify-content: space-between;
+        .price {
           font-weight: bold;
+          color: #ed3f14;
+          font-size: 16px;
+        }
+        .sold {
+          font-size: 12px;
         }
       }
       .p3_all {
@@ -200,4 +203,24 @@ header {
   padding-right: 10px;
   padding-top: 10px;
   padding-bottom: 20px;
+}
+
+.myanimation1 {
+  animation: rotate1 .2s 1 linear;
+  animation-fill-mode: forwards;
+}
+
+.myanimation2 {
+  animation: rotate2 .2s 1 linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes rotate1{
+  from {transform: rotate(0deg);}
+  to {transform: rotate(180deg);}
+}
+
+@keyframes rotate2{
+  from {transform: rotate(180deg);}
+  to {transform: rotate(0deg);}
 }

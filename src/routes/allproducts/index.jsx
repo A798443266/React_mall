@@ -14,7 +14,8 @@ export default class Allproducts extends React.Component {
     pageNo: 1,
     pageSize: 10,
     total: 0,
-    sortType: false
+    sortPrice: false,
+    sortSold: false
   };
   async componentDidMount() {
     const res = await request("/goodsCate");
@@ -29,12 +30,22 @@ export default class Allproducts extends React.Component {
 
   // 价格排序
   sortByPrice = type => {
-    let { shopList, sortType } = this.state;
+    let { shopList, sortPrice } = this.state;
     shopList.sort((s1, s2) => {
       return type ? s1.price - s2.price : s2.price - s1.price;
     });
-    sortType = !sortType
-    this.setState({ shopList, sortType });
+    sortPrice = !sortPrice;
+    this.setState({ shopList, sortPrice });
+  };
+
+  // 销售量排序
+  sortBySold = type => {
+    let { shopList, sortSold } = this.state;
+    shopList.sort((s1, s2) => {
+      return type ? s1.sold - s2.sold : s2.sold - s1.sold;
+    });
+    sortSold = !sortSold;
+    this.setState({ shopList, sortSold });
   };
 
   fetchShops = async (data = {}) => {
@@ -68,10 +79,16 @@ export default class Allproducts extends React.Component {
   };
 
   render() {
-    const { shopList, categorys, curIndex, total } = this.state;
+    const {
+      shopList,
+      categorys,
+      curIndex,
+      total,
+      sortPrice,
+      sortSold
+    } = this.state;
     return (
       <div className="container_all">
-        {/* <div className={styles.container}>  */}
         <header>
           <div>
             <Link to="/">
@@ -145,18 +162,32 @@ export default class Allproducts extends React.Component {
           </div>
           <div className="search-bar_all">
             <div className="left_all">
-              <span style={{ marginRight: 20 }}>
+              {/* <span style={{ marginRight: 20 }}>
                 综合 <Icon type="caret-down" />
-              </span>
-              <span style={{ marginRight: 20 }}>
-                销量 <Icon type="caret-down" />
+              </span> */}
+              <span
+                style={{ marginRight: 20, cursor: "pointer" }}
+                onClick={() => {
+                  this.sortBySold(sortSold);
+                }}
+              >
+                销量{" "}
+                <Icon
+                  type="caret-down"
+                  className={sortSold ? "myanimation2" : "myanimation1"}
+                />
               </span>
               <span
                 onClick={() => {
-                  this.sortByPrice();
+                  this.sortByPrice(sortPrice);
                 }}
+                style={{ cursor: "pointer" }}
               >
-                价格 <Icon type="caret-down" />
+                价格{" "}
+                <Icon
+                  type="caret-down"
+                  className={sortPrice ? "myanimation2" : "myanimation1"}
+                />
               </span>
             </div>
             <div className="right_all">
@@ -183,7 +214,8 @@ export default class Allproducts extends React.Component {
                       {ret.goods}
                     </p>
                     <p className="p2_all">
-                      ￥<span>{ret.price}</span>
+                      <span className="price">￥{ret.price}</span>
+                      <span className="sold">已售：{ret.sold}</span>
                     </p>
                     <p className="p3_all">{ret.introduce}</p>
                   </li>

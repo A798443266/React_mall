@@ -34,6 +34,10 @@ export default class TableComponent extends React.Component {
         dataIndex: "phone"
       },
       {
+        title: "收货地址",
+        dataIndex: "address"
+      },
+      {
         title: "实付款",
         dataIndex: "money",
         render: text => (
