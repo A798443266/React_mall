@@ -27,11 +27,11 @@ class Login extends React.Component {
           const res = await this.props.login(data);
           const { code, msg, user } = res;
           if (code === 200) {
-            notification.success({ message: "登陆成功！" });
+            notification.success({ message: "登陆成功！", duration: 2 });
             cache.saveUser(user);
             this.props.history.push("/");
           } else {
-            notification.error({ message: msg });
+            notification.error({ message: msg, duration: 2 });
           }
         }
       }
@@ -48,7 +48,7 @@ class Login extends React.Component {
             method: "PUT",
             body: { userName, phone, password }
           });
-          notification.success({ message: "注册成功！" });
+          notification.success({ message: "注册成功！", duration: 2 });
           this.setState({ isLogin: true });
         }
       }
@@ -85,11 +85,11 @@ class Login extends React.Component {
                     <Input
                       prefix={
                         <Icon
-                          type="user"
+                          type="phone"
                           style={{ color: "rgba(0,0,0,.25)" }}
                         />
                       }
-                      placeholder="手机/邮箱/用户"
+                      placeholder="手机号"
                     />
                   )}
                 </Form.Item>
@@ -151,7 +151,7 @@ class Login extends React.Component {
                     <Input
                       prefix={
                         <Icon
-                          type="user"
+                          type="phone"
                           style={{ color: "rgba(0,0,0,.25)" }}
                         />
                       }

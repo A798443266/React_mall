@@ -1,7 +1,8 @@
 import React from "react";
-import { Table } from "antd";
+import { Table, Modal, message } from "antd";
 import { Link } from "dva/router";
 import "./index.scss";
+import request from "../../../../../utils/request";
 
 export default class TableComponent extends React.Component {
   constructor(props) {
@@ -54,8 +55,15 @@ export default class TableComponent extends React.Component {
         dataIndex: "",
         render: (text, row) => (
           <>
-            <p className="action_od">订单详情</p>
-            <p className="action_od">删除</p>
+            {/* <p className="action_od">订单详情</p> */}
+            <p
+              className="action_od"
+              onClick={() => {
+                this.deleteOrder(row.orderId);
+              }}
+            >
+              删除
+            </p>
           </>
         )
       }
@@ -67,6 +75,22 @@ export default class TableComponent extends React.Component {
     const expandedRowKeys = orders.map(ret => String(ret.id));
     this.setState({ expandedRowKeys });
   }
+
+  deleteOrder = orderId => {
+    Modal.confirm({
+      title: "提示",
+      content: "删除后将不能恢复，您确定要删除该订单吗？",
+      onOk: async () => {
+        const { code } = await request(`/delOrder?orderId=${orderId}`, {
+          method: "DELETE"
+        });
+        if (code === 200) {
+          message.success('删除成功！')
+          this.props.reflesh()
+        }
+      }
+    });
+  };
 
   onExpand = (expanded, record) => {
     let { expandedRowKeys } = this.state;

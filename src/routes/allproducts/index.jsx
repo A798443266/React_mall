@@ -1,5 +1,5 @@
 import React from "react";
-import { Breadcrumb, Icon, Switch, Pagination, BackTop } from "antd";
+import { Breadcrumb, Icon, Switch, Pagination, BackTop, Spin } from "antd";
 import { Link } from "dva/router";
 import Footer from "../../components/footer";
 import styles from "./index.scss";
@@ -8,6 +8,7 @@ import request from "../../utils/request";
 
 export default class Allproducts extends React.Component {
   state = {
+    loading: false,
     shopList: [],
     categorys: [{ category: "全部", id: 0 }],
     curIndex: 0, // 当前分类下标
@@ -15,14 +16,15 @@ export default class Allproducts extends React.Component {
     pageSize: 10,
     total: 0,
     sortPrice: false,
-    sortSold: false
+    sortSold: false,
+    searchKey: "" //搜索关键词
   };
   async componentDidMount() {
     const res = await request("/goodsCate");
     const {
       extend: { goodCate: categorys }
     } = res;
-    this.fetchShops({ pageNo: 1, pageSize: 10 });
+    this.fetchShops();
     this.setState(preState => ({
       categorys: preState.categorys.concat(categorys)
     }));
@@ -48,33 +50,55 @@ export default class Allproducts extends React.Component {
     this.setState({ shopList, sortSold });
   };
 
-  fetchShops = async (data = {}) => {
+  fetchShops = async () => {
+    this.setState({ loading: true });
+    const { pageNo, pageSize, curIndex } = this.state;
     const {
       extend: {
         page: { list: shopList, total }
       }
-    } = await request("/allGoods", { body: data });
-    this.setState({ shopList, total });
+    } = await request("/allGoods", {
+      body: { pageNo, pageSize, cateId: curIndex }
+    });
+    this.setState({ shopList, total, loading: false });
+  };
+
+  searchGoods = () => {
+    const { searchKey } = this.state;
+    this.setState({ pageNo: 1, pageSize: 10, curIndex: 0 }, async () => {
+      this.setState({ loading: true });
+      const { code, extend } = await request("/getGoodsByKey", {
+        body: {
+          pageNo: 1,
+          pageSize: 10,
+          key: searchKey
+        }
+      });
+      if (code === 200) {
+        const {
+          page: { list: shopList, total }
+        } = extend;
+        this.setState({ shopList, total });
+      }
+      this.setState({ loading: false });
+    });
   };
 
   onChange = (pageNo, pageSize) => {
-    const { curIndex } = this.state;
     this.setState({ pageNo, pageSize }, () => {
-      this.fetchShops({ pageNo, pageSize, cateId: curIndex });
+      this.fetchShops();
     });
   };
 
   onShowSizeChange = (current, pageSize) => {
-    const { curIndex } = this.state;
     this.setState({ pageSize }, () => {
-      this.fetchShops({ pageNo: 1, pageSize, cateId: curIndex });
+      this.fetchShops();
     });
   };
 
   handleChangeCate = id => {
-    const { pageNo, pageSize } = this.state;
     this.setState({ curIndex: id }, () => {
-      this.fetchShops({ pageNo, pageSize, cateId: id });
+      this.fetchShops();
     });
   };
 
@@ -84,8 +108,11 @@ export default class Allproducts extends React.Component {
       categorys,
       curIndex,
       total,
+      pageNo,
       sortPrice,
-      sortSold
+      sortSold,
+      searchKey,
+      loading
     } = this.state;
     return (
       <div className="container_all">
@@ -96,8 +123,12 @@ export default class Allproducts extends React.Component {
             </Link>
             <div>
               <div className="searchBox_all">
-                <input placeholder="请输入商品名称" />
-                <div>
+                <input
+                  placeholder="请输入商品名称"
+                  value={searchKey}
+                  onChange={e => this.setState({ searchKey: e.target.value })}
+                />
+                <div onClick={this.searchGoods}>
                   <Icon
                     type="search"
                     style={{ fontSize: 22, fontWeight: "bold", color: "#fff" }}
@@ -198,34 +229,37 @@ export default class Allproducts extends React.Component {
             </div>
           </div>
           <div className="shops_all">
-            <ul>
-              {shopList.map((ret, i) => {
-                return (
-                  <li key={i}>
-                    <Link to={`/proDetail/${ret.id}`}>
-                      <img src={ret.mainPic} alt="" />
-                    </Link>
-                    <p
-                      className="p1_all"
-                      onClick={() => {
-                        this.props.history.push(`/proDetail/${ret.id}`);
-                      }}
-                    >
-                      {ret.goods}
-                    </p>
-                    <p className="p2_all">
-                      <span className="price">￥{ret.price}</span>
-                      <span className="sold">已售：{ret.sold}</span>
-                    </p>
-                    <p className="p3_all">{ret.introduce}</p>
-                  </li>
-                );
-              })}
-            </ul>
+            <Spin spinning={loading}>
+              <ul>
+                {shopList.map((ret, i) => {
+                  return (
+                    <li key={i}>
+                      <Link to={`/proDetail/${ret.id}`}>
+                        <img src={ret.mainPic} alt="" />
+                      </Link>
+                      <p
+                        className="p1_all"
+                        onClick={() => {
+                          this.props.history.push(`/proDetail/${ret.id}`);
+                        }}
+                      >
+                        {ret.goods}
+                      </p>
+                      <p className="p2_all">
+                        <span className="price">￥{ret.price}</span>
+                        <span className="sold">已售：{ret.sold}</span>
+                      </p>
+                      <p className="p3_all">{ret.introduce}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Spin>
           </div>
           <div className="pagination_all">
             <Pagination
               total={total}
+              current={pageNo}
               showSizeChanger
               showQuickJumper
               onShowSizeChange={this.onShowSizeChange}

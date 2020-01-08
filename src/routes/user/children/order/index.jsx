@@ -13,6 +13,10 @@ export default class Order extends React.Component {
   };
 
   async componentDidMount() {
+    this.getOrders()
+  }
+
+  getOrders = async () => {
     const user = cache.getUser();
     const res = await request("/getHistoryOrders", {
       body: { userId: user.id }
@@ -50,7 +54,7 @@ export default class Order extends React.Component {
       <Tabs defaultActiveKey="1">
         <TabPane tab="全部订单" key="1">
           {orders.length ? (
-            <TableComponent orders={orders} />
+            <TableComponent orders={orders} reflesh={this.getOrders} />
           ) : (
             this.renderEmpty()
           )}

@@ -346,6 +346,10 @@ class Settlement extends React.Component {
           </Form.Item>
         </Modal>
 
+        <Modal>
+          
+        </Modal>
+
         <Result
           style={{ display: current === 2 ? "block" : "none" }}
           status="success"
